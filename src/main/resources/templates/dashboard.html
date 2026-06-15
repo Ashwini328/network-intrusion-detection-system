@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>AI Network IDS</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+
+</head>
+
+<script th:inline="javascript">
+    let searchedIp = [[${param.ip}]];
+
+    if(searchedIp != null){
+        document.getElementById("activity")
+                .scrollIntoView({behavior:"smooth"});
+    }
+</script>
+
+<!--<script>-->
+<!--    setInterval(function() {-->
+<!--        location.reload();-->
+<!--    }, 10000);-->
+<!--</script>-->
+<!--<script>-->
+<!--    setInterval(function() {-->
+<!--        location.reload();-->
+<!--    }, 5000);-->
+<!--</script>-->
+
+<!--<script>-->
+<!--    setInterval(() => {-->
+<!--        document.getElementById("clock").innerHTML =-->
+<!--            new Date().toLocaleString();-->
+<!--    }, 1000);-->
+<!--</script>-->
+
+<body>
+
+<h1>AI Network Intrusion Detection System</h1>
+
+
+<hr>
+<div class="container">
+
+    <h3 id="clock"></h3>
+    <br>
+
+    <div class="card box total">
+        <h2>Total Packets</h2>
+        <h3 th:text="${totalPackets}"></h3>
+    </div>
+
+    <div class="card box normal-card">
+        <h2>Normal Traffic</h2>
+        <h3 th:text="${normalTraffic}"></h3>
+    </div>
+
+    <div class="card box attack-card">
+        <h2>Attack Traffic</h2>
+        <h3 th:text="${attackTraffic}"></h3>
+    </div>
+
+    <div class="card box percentage-card">
+        <h2>Attack %</h2>
+        <h3 th:text="${attackPercentage} + '%'"></h3>
+    </div>
+
+    <div class="card box attack-card">
+        <h2>High Risk Alerts</h2>
+        <h3 th:text="${highSeverity}"></h3>
+    </div>
+
+</div>
+
+<br>
+
+<h2 style="text-align:center;margin-top:40px;">
+    Traffic Analysis
+</h2>
+
+<div style="width:400px;margin:30px auto;">
+    <canvas id="trafficChart"></canvas>
+</div>
+
+
+<h2 style="text-align:center;margin-top:40px;">
+    Traffic Comparison
+</h2>
+
+<div style="width:500px;margin:30px auto;">
+    <canvas id="barChart"></canvas>
+</div>
+
+<h2 style="text-align:center;margin-top:40px;">Attack Distribution</h2>
+
+<div style="width:500px;margin:auto;">
+    <canvas id="attackChart"></canvas>
+</div>
+
+<!--<div style="text-align:center;margin:20px;">-->
+<!--    <a href="/generate">-->
+<!--        <button style="padding:10px 20px;font-size:16px;">-->
+<!--            Generate Traffic-->
+<!--        </button>-->
+<!--    </a>-->
+<!--</div>-->
+
+<h2>Recent Network Activity</h2>
+
+<form action="/" method="get">
+    <input type="text"
+           name="ip"
+           placeholder="Search IP">
+
+    <button type="submit">
+        Search
+    </button>
+</form>
+
+<div th:if="${attackTraffic > 0}" class="alert-box">
+    ⚠ Warning: Attack Traffic Detected!
+</div>
+
+<div th:if="${highSeverity > 0}"
+     class="high-alert">
+
+    🚨 Critical Threat Detected!
+</div>
+
+<h2>🚨 Recent Attack Alerts</h2>
+
+<div class="alert-container">
+
+    <div class="alert-card"
+         th:each="attack : ${attackLogs}">
+
+        <strong>IP:</strong>
+        <span th:text="${attack.sourceIp}"></span>
+
+        |
+
+        <strong>Protocol:</strong>
+        <span th:text="${attack.protocol}"></span>
+
+        |
+
+        <strong>Status:</strong>
+        <span style="color:red"
+              th:text="${attack.status}">
+        </span>
+
+    </div>
+
+</div>
+
+<form action="/" method="get">
+
+    <input type="text"
+           name="ip"
+           placeholder="Search IP">
+
+    <select name="severity">
+        <option value="">All Severity</option>
+        <option value="High">High</option>
+        <option value="Medium">Medium</option>
+        <option value="Low">Low</option>
+        <option value="Safe">Safe</option>
+    </select>
+
+    <button type="submit">
+        Filter
+    </button>
+
+</form>
+<table>
+
+    <tr>
+        <th>ID</th>
+        <th>Source IP</th>
+        <th>Protocol</th>
+        <th>Status</th>
+        <th>Time</th>
+        <th>Attack Type</th>
+        <th>Severity</th>
+    </tr>
+
+    <tr th:each="log : ${logs}">
+        <td th:text="${log.id}"></td>
+        <td th:text="${log.sourceIp}"></td>
+        <td th:text="${log.protocol}"></td>
+        <td>
+    <span th:class="${log.status == 'Normal'} ? 'normal' : 'attack'"
+          th:text="${log.status}">
+    </span>
+        </td>
+        <td th:text="${log.timestamp}"></td>
+        <td th:text="${log.attackType}"></td>
+        <td>
+    <span th:if="${log.severity=='High'}"
+          style="color:red;font-weight:bold;">
+        High
+    </span>
+
+            <span th:if="${log.severity=='Medium'}"
+                  style="color:orange;font-weight:bold;">
+        Medium
+    </span>
+
+            <span th:if="${log.severity=='Low'}"
+                  style="color:blue;font-weight:bold;">
+        Low
+    </span>
+
+            <span th:if="${log.severity=='Safe'}"
+                  style="color:green;font-weight:bold;">
+        Safe
+    </span>
+        </td>
+    </tr>
+
+</table>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script th:inline="javascript">
+
+    const normal = [[${normalTraffic}]];
+    const attack = [[${attackTraffic}]];
+
+    const ddos = [[${ddos}]];
+    const sql = [[${sql}]];
+    const brute = [[${brute}]];
+    const portScan = [[${portScan}]];
+
+    // Pie Chart
+    new Chart(document.getElementById('trafficChart'), {
+        type: 'pie',
+        data: {
+            labels: ['Normal', 'Attack'],
+            datasets: [{
+                data: [normal, attack],
+                backgroundColor: ['green', 'red']
+            }]
+        }
+    });
+
+    // Bar Chart
+    new Chart(document.getElementById('barChart'), {
+        type: 'bar',
+        data: {
+            labels: ['Normal', 'Attack'],
+            datasets: [{
+                label: 'Packets',
+                data: [normal, attack],
+                backgroundColor: ['green', 'red']
+            }]
+        }
+    });
+
+    // Attack Distribution Chart
+    new Chart(document.getElementById('attackChart'), {
+        type: 'doughnut',
+        data: {
+            labels: [
+                'DDoS',
+                'SQL Injection',
+                'Brute Force',
+                'Port Scan'
+            ],
+            datasets: [{
+                data: [
+                    ddos,
+                    sql,
+                    brute,
+                    portScan
+                ]
+            }]
+        }
+    });
+
+</script>
+
+</body>
+<footer>
+    <p>AI Network Intrusion Detection System</p>
+    <p>Developed by Ashwini</p>
+</footer>
+</html>
